@@ -1,5 +1,11 @@
 # OpenSSH 9.8p1 离线安装依赖检查与下载工具 (Ubuntu/Debian版)
 
+> **重要提示**：本目录下有两个恢复脚本：
+> - `restore_openssh.sh`：**推荐使用**的最新版本恢复脚本
+> - `restore_openssh_backup.sh`：旧版恢复脚本，已弃用
+>
+> 请始终使用 `restore_openssh.sh` 进行恢复操作。
+
 ## 项目简介
 
 此工具专为Ubuntu/Debian系统设计，用于解决在无网络环境中安装OpenSSH 9.8p1遇到的依赖问题。它能够：
@@ -158,13 +164,181 @@ sudo ./restore_openssh.sh
 
 ## 故障排除
 
-1. **无法检测依赖**：确保在Ubuntu/Debian系统上运行，并使用root权限
-2. **下载依赖失败**：检查网络连接，确保apt源配置正确
-3. **集成依赖失败**：确保OpenSSH安装包格式正确，且包含dependencies目录
-4. **编译失败**：检查是否缺少必要的库文件，查看`install.log`日志
-5. **SSH服务无法启动**：使用`journalctl -u ssh`查看详细日志
+1. **无法检测依赖**：
+   - 确保在Ubuntu/Debian系统上运行，并使用root权限
+   - 检查系统版本是否在支持列表中
+   - 确保`dpkg`和`apt`命令可用
+   - 检查`/var/lib/dpkg/status`文件权限是否正确
+
+2. **下载依赖失败**：
+   - 检查网络连接
+   - 确保apt源配置正确
+   - 尝试更新apt缓存：`apt-get update`
+   - 检查磁盘空间是否充足
+   - 如果使用代理，确保代理配置正确
+
+3. **集成依赖失败**：
+   - 确保OpenSSH安装包格式正确，且包含dependencies目录
+   - 检查磁盘空间是否充足
+   - 验证依赖包是否完整下载
+   - 检查文件系统权限
+
+4. **编译失败**：
+   - 检查是否缺少必要的库文件
+   - 查看`install.log`日志中的具体错误信息
+   - 确保gcc和make版本兼容
+   - 检查系统内存是否充足
+   - 验证源码包完整性
+
+5. **SSH服务无法启动**：
+   - 使用`journalctl -u ssh`查看详细日志
+   - 检查配置文件语法：`sshd -t`
+   - 确认端口22没有被占用：`netstat -tuln | grep 22`
+   - 检查SELinux状态和配置
+   - 验证权限和密钥文件
+
+6. **升级后无法连接**：
+   - 检查防火墙规则
+   - 验证sshd_config配置
+   - 确认认证方式（密码/密钥）配置正确
+   - 检查客户端版本兼容性
+   - 使用`ssh -v`获取详细连接日志
+
+7. **依赖冲突**：
+   - 检查系统中可能存在的冲突包
+   - 尝试先卸载冲突包
+   - 查看`/var/log/apt/history.log`了解包安装历史
+   - 使用`apt-cache policy`检查包版本
 
 ## 维护与扩展
 
-如需添加新的依赖检查，请在`check_openssh_deps.sh`脚本中编辑`OPENSSH_DEPS`数组添加新的依赖项。
-如需添加更多SSL相关库过滤，编辑`SSL_PACKAGES`数组。 
+### 添加新的依赖检查
+
+1. 在`check_openssh_deps.sh`脚本中编辑`OPENSSH_DEPS`数组：
+```bash
+OPENSSH_DEPS=(
+    "existing-dep1"
+    "existing-dep2"
+    "new-dep"  # 新添加的依赖
+)
+```
+
+2. 如果新依赖是SSL相关的，需要在`SSL_PACKAGES`数组中添加：
+```bash
+SSL_PACKAGES=(
+    "existing-ssl-pkg1"
+    "new-ssl-pkg"  # 新添加的SSL相关包
+)
+```
+
+### 修改编译配置
+
+1. 在`install_openssh98_offline.sh`中的`configure`命令部分修改编译选项：
+```bash
+./configure \
+    --prefix=/usr \
+    --new-option=value \  # 添加新的编译选项
+    --existing-option=value
+```
+
+### 添加新的系统支持
+
+1. 在版本检测部分添加新的系统版本支持：
+```bash
+check_system_version() {
+    # 现有的版本检查代码
+    # 添加新的版本支持
+    if [[ "$VERSION_ID" == "new_version" ]]; then
+        echo "Detected Ubuntu/Debian new_version"
+        return 0
+    fi
+}
+```
+
+### 改进错误处理
+
+1. 添加新的错误检查函数：
+```bash
+check_new_error() {
+    # 新的错误检查逻辑
+    if [ condition ]; then
+        log_error "New error detected"
+        return 1
+    fi
+    return 0
+}
+```
+
+2. 在主流程中调用新的错误检查：
+```bash
+main() {
+    # 现有的代码
+    check_new_error || exit 1
+    # 继续执行
+}
+```
+
+### 添加新功能
+
+1. 创建新的功能函数：
+```bash
+new_feature() {
+    log_info "Starting new feature"
+    # 功能实现代码
+    log_success "New feature completed"
+}
+```
+
+2. 在菜单选项中添加新功能：
+```bash
+show_menu() {
+    # 现有的菜单选项
+    echo "6) 执行新功能"
+}
+```
+
+### 测试指南
+
+1. 单元测试：
+```bash
+test_new_feature() {
+    # 测试代码
+    assert "expected" "actual"
+}
+```
+
+2. 集成测试：
+```bash
+integration_test() {
+    # 集成测试代码
+}
+```
+
+### 文档维护
+
+1. 更新功能列表
+2. 添加新的故障排除案例
+3. 更新兼容性信息
+4. 添加新功能的使用示例
+5. 更新架构图
+
+### 版本控制
+
+1. 遵循语义化版本规范
+2. 维护更新日志
+3. 标记重要的代码修改
+4. 记录API更改
+
+### 性能优化
+
+1. 优化依赖检查逻辑
+2. 改进下载机制
+3. 优化编译配置
+4. 改进错误处理效率
+
+### 安全性改进
+
+1. 增加完整性检查
+2. 改进权限管理
+3. 加强配置验证
+4. 更新安全策略 

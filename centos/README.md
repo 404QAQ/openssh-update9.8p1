@@ -1,5 +1,13 @@
 # OpenSSH 9.8p1 和 OpenSSL 1.1.1 离线安装工具 (CentOS 7版)
 
+> **目录说明**：本目录下的 `local_source` 目录用于缓存下载的源码和依赖包。
+> 此目录不会被包含在最终的安装包中，您可以：
+> - 将其添加到 .gitignore 中
+> - 用作临时的下载缓存
+> - 在传输安装包前删除此目录
+>
+> 这个目录的存在不会影响工具的正常使用。
+
 ## 项目简介
 
 此工具专为CentOS 7系统设计，用于解决在无网络环境中安装OpenSSH 9.8p1和OpenSSL 1.1.1遇到的依赖问题。它能够：
@@ -168,13 +176,197 @@ sudo ./restore_openssh_centos.sh
 
 ## 故障排除
 
-1. **无法检测依赖**：确保在CentOS 7系统上运行，并使用root权限
-2. **下载依赖失败**：检查网络连接，确保yum源配置正确
-3. **集成依赖失败**：确保OpenSSH安装包格式正确，且包含dependencies目录
-4. **OpenSSL编译失败**：检查是否缺少perl相关依赖，查看`install.log`日志
-5. **编译OpenSSH失败**：确保OpenSSL正确安装，查看`install.log`日志
-6. **SSH服务无法启动**：使用`journalctl -u sshd`查看详细日志
+1. **无法检测依赖**：
+   - 确保在CentOS 7系统上运行，并使用root权限
+   - 检查系统版本：`cat /etc/redhat-release`
+   - 确保`rpm`和`yum`命令可用
+   - 检查`/var/lib/rpm`数据库是否完整
+
+2. **下载依赖失败**：
+   - 检查网络连接
+   - 确保yum源配置正确：`yum repolist`
+   - 尝试清理yum缓存：`yum clean all`
+   - 检查磁盘空间：`df -h`
+   - 如果使用代理，检查代理配置
+
+3. **集成依赖失败**：
+   - 确保OpenSSH安装包格式正确，且包含dependencies目录
+   - 检查磁盘空间是否充足
+   - 验证依赖包是否完整下载
+   - 检查文件系统权限
+   - 确保SELinux没有阻止文件访问
+
+4. **OpenSSL编译失败**：
+   - 检查是否缺少perl相关依赖
+   - 查看`install.log`日志中的具体错误信息
+   - 确保gcc和make版本兼容
+   - 检查系统内存是否充足
+   - 验证源码包完整性
+
+5. **编译OpenSSH失败**：
+   - 确保OpenSSL正确安装
+   - 检查OpenSSL头文件位置
+   - 验证编译工具链完整性
+   - 检查系统资源使用情况
+   - 查看详细编译日志
+
+6. **SSH服务无法启动**：
+   - 使用`journalctl -u sshd`查看详细日志
+   - 检查配置文件语法：`sshd -t`
+   - 确认端口22没有被占用：`netstat -tuln | grep 22`
+   - 检查SELinux状态：`getenforce`
+   - 验证权限和密钥文件
+
+7. **OpenSSL升级后的兼容性问题**：
+   - 检查依赖OpenSSL的其他服务
+   - 验证库文件链接是否正确
+   - 检查环境变量设置
+   - 测试SSL功能：`openssl version -a`
+
+8. **系统服务依赖问题**：
+   - 检查systemd服务状态
+   - 验证服务启动顺序
+   - 检查服务依赖关系
+   - 查看服务日志
 
 ## 维护与扩展
 
-如需添加新的依赖检查，请在`check_openssh_deps_centos.sh`脚本中编辑`OPENSSH_DEPS`数组添加新的依赖项。 
+### 添加新的依赖检查
+
+1. 在`check_openssh_deps_centos.sh`脚本中编辑`OPENSSH_DEPS`数组：
+```bash
+OPENSSH_DEPS=(
+    "existing-dep1"
+    "existing-dep2"
+    "new-dep"  # 新添加的依赖
+)
+```
+
+### 修改OpenSSL配置
+
+1. 在`install_openssh98_offline_centos.sh`中修改OpenSSL编译选项：
+```bash
+./config \
+    --prefix=/usr/local/openssl-1.1.1 \
+    --new-option=value \  # 添加新的编译选项
+    shared
+```
+
+### 修改OpenSSH配置
+
+1. 更新OpenSSH编译选项：
+```bash
+./configure \
+    --with-ssl-dir=/usr/local/openssl-1.1.1 \
+    --new-option=value \  # 添加新的编译选项
+    --existing-option=value
+```
+
+### 添加新的系统支持
+
+1. 在版本检测部分添加新的系统版本支持：
+```bash
+check_system_version() {
+    # 现有的版本检查代码
+    # 添加新的版本支持
+    if grep -q "CentOS Linux release new_version" /etc/redhat-release; then
+        echo "Detected CentOS new_version"
+        return 0
+    fi
+}
+```
+
+### 改进错误处理
+
+1. 添加新的错误检查函数：
+```bash
+check_new_error() {
+    # 新的错误检查逻辑
+    if [ condition ]; then
+        log_error "New error detected"
+        return 1
+    fi
+    return 0
+}
+```
+
+2. 在主流程中调用新的错误检查：
+```bash
+main() {
+    # 现有的代码
+    check_new_error || exit 1
+    # 继续执行
+}
+```
+
+### 添加新功能
+
+1. 创建新的功能函数：
+```bash
+new_feature() {
+    log_info "Starting new feature"
+    # 功能实现代码
+    log_success "New feature completed"
+}
+```
+
+2. 在菜单选项中添加新功能：
+```bash
+show_menu() {
+    # 现有的菜单选项
+    echo "6) 执行新功能"
+}
+```
+
+### 测试指南
+
+1. 单元测试：
+```bash
+test_new_feature() {
+    # 测试代码
+    assert "expected" "actual"
+}
+```
+
+2. 集成测试：
+```bash
+integration_test() {
+    # 集成测试代码
+}
+```
+
+### 文档维护
+
+1. 更新功能列表
+2. 添加新的故障排除案例
+3. 更新兼容性信息
+4. 添加新功能的使用示例
+5. 更新架构图
+
+### 版本控制
+
+1. 遵循语义化版本规范
+2. 维护更新日志
+3. 标记重要的代码修改
+4. 记录API更改
+
+### 性能优化
+
+1. 优化依赖检查逻辑
+2. 改进下载机制
+3. 优化编译配置
+4. 改进错误处理效率
+
+### 安全性改进
+
+1. 增加完整性检查
+2. 改进权限管理
+3. 加强配置验证
+4. 更新安全策略
+
+### OpenSSL特定优化
+
+1. 优化SSL配置
+2. 更新加密套件
+3. 改进性能参数
+4. 加强安全设置 

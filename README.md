@@ -22,25 +22,20 @@
 根据您的操作系统，请进入相应的目录：
 
 - `ubuntu/` - 包含适用于Ubuntu/Debian系统的工具
+  - `download_openssh98.sh` - 在有网络环境下载OpenSSH源码和依赖
+  - `check_openssh_deps.sh` - 检查依赖并准备安装包
+  - `install_openssh98_offline.sh` - 离线安装OpenSSH 9.8p1
+  - `restore_openssh.sh` - 恢复到原始安装（如果安装失败）
+  - `restore_openssh_backup.sh` - 旧版恢复脚本（已弃用，请使用 restore_openssh.sh）
+  - `README.md` - Ubuntu/Debian版本的详细说明
+
 - `centos/` - 包含适用于CentOS 7系统的工具
-
-## Ubuntu/Debian版本工具
-
-Ubuntu/Debian目录下包含以下工具：
-
-1. `download_openssh98.sh` - 在有网络环境下载OpenSSH源码和依赖
-2. `check_openssh_deps.sh` - 检查依赖并准备安装包
-3. `install_openssh98_offline.sh` - 离线安装OpenSSH 9.8p1
-4. `restore_openssh_backup.sh` - 恢复到原始安装（如果安装失败）
-
-## CentOS 7版本工具
-
-CentOS目录下包含以下工具：
-
-1. `download_openssh98_centos.sh` - 在有网络环境下载OpenSSH和OpenSSL源码及依赖（兼容旧系统）
-2. `check_openssh_deps_centos.sh` - 检查依赖并准备安装包
-3. `install_openssh98_offline_centos.sh` - 离线安装OpenSSH 9.8p1和OpenSSL 1.1.1(如需)
-4. `restore_openssh_centos.sh` - 恢复到原始安装（如果安装失败）
+  - `download_openssh98_centos.sh` - 在有网络环境下载OpenSSH和OpenSSL源码及依赖
+  - `check_openssh_deps_centos.sh` - 检查依赖并准备安装包
+  - `install_openssh98_offline_centos.sh` - 离线安装OpenSSH 9.8p1和OpenSSL 1.1.1
+  - `restore_openssh_centos.sh` - 恢复到原始安装（如果安装失败）
+  - `local_source/` - 本地源码和依赖缓存目录（可忽略）
+  - `README.md` - CentOS版本的详细说明
 
 ## 使用流程
 
@@ -97,6 +92,8 @@ sudo ./install_openssh98_offline_centos.sh
 3. 如果安装过程中断或失败，请使用相应的恢复脚本
 4. 安装完成后，建议在新终端窗口测试SSH连接，确保功能正常
 5. 针对旧版系统，下载脚本已做兼容性处理，能适应不同版本的wget和包管理器
+6. Ubuntu版本中的 `restore_openssh_backup.sh` 已弃用，请使用 `restore_openssh.sh`
+7. CentOS版本中的 `local_source` 目录用于缓存下载的源码和依赖，可以忽略或添加到 .gitignore
 
 ## 故障排除
 
@@ -110,17 +107,39 @@ sudo ./install_openssh98_offline_centos.sh
    - 检查相关的日志文件（install.log）获取详细错误信息
 
 3. **安装失败**：
-   - 使用恢复脚本回滚变更：`./restore_openssh_backup.sh`或`./restore_openssh_centos.sh`
+   - Ubuntu/Debian：使用 `./restore_openssh.sh` 回滚变更
+   - CentOS：使用 `./restore_openssh_centos.sh` 回滚变更
    - 检查安装日志获取错误详情
 
 4. **下载工具兼容性问题**：
    - 如遇到wget参数不兼容问题，已优化脚本自动适应
    - 如果yumdownloader不可用，脚本会自动切换到yum模式下载
 
+## 日志文件说明
+
+所有脚本都会生成详细的日志文件：
+- `download.log` - 下载过程日志
+- `deps_check.log` - 依赖检查日志
+- `install.log` - 安装过程日志
+- `restore.log` - 恢复过程日志
+
+## 贡献指南
+
+欢迎任何形式的贡献，包括但不限于：
+
+1. 提交问题和建议
+2. 改进文档
+3. 提交代码修改
+4. 分享使用经验
+
+
+
 ## 技术支持
 
-如有任何问题或建议，请联系项目维护者或提交问题报告。
-3031138917@qq.com
+如有任何问题或建议，请联系项目维护者或提交问题报告：
+- Email: 3031138917@qq.com
+- GitHub Issues: [提交问题](https://github.com/luohaoqiang/openssh9.8up/issues)
+
 
 ---
 
